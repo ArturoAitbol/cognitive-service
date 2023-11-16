@@ -22,7 +22,7 @@ Asistente utilizando Cognitive Services de Azure Ai, orientado a realizar una un
 
 ## Archivos
 
-- env.txt: que contiene las keys y endpoinds para consumir los servicios de Azure y google
+- env.txt: en este archivo se configuran las keys y endpoinds para consumir los servicios de Azure y Google. Esta información es sensible por lo cual el archivo del repositorio no tiene los values de cada key
 - allesandro.py : archivo con las funciones y logica para nuestro asistente
 
 ## Interaccion/Ejecucion
