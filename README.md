@@ -3,6 +3,9 @@
 ## Descripcion
 Asistente utilizando Cognitive Services de Azure Ai, orientado a realizar una unica tarea, brindar informacion de figuras públicas.
 
+## Video: 
+- https://drive.google.com/file/d/1Y1jdWdVZb5h6gwwMhJPMdG5ANyNEw-A2/view?usp=sharing
+
 ## Tareas que ejecuta
 
 - Reconocimiento de instruccion/pregunta utilizando el microfono del dispositivo.
