@@ -10,6 +10,8 @@ from azure.ai.textanalytics import (
     TextAnalyticsClient,
     ExtractiveSummaryAction
 )
+from azure.ai.contentsafety import ContentSafetyClient
+from azure.ai.contentsafety.models import AnalyzeTextOptions
 from dotenv import load_dotenv
 
 load_dotenv("env.txt")
@@ -51,7 +53,7 @@ def analyze_text(text_input: str):
         violence_severity = response.violence_result.severity
     if hate_severity < 1 or selfharm_severity < 1 or sexual_severity < 1 or violence_severity > 1 :
         return True
-    else
+    else:
         return False
 
 
@@ -93,12 +95,11 @@ def ask_google(text_to_ask):
         if description:
             return description
     else:
-    print("Lo siento, no puedo ayudarte porque no tengo información sobre:" {query})
+        print("Lo siento, no puedo ayudarte porque no tengo información sobre:" + query)
 
 # Ejemplo para resumir texto
 def extractive_summarization(client, documents):
-    document = documents
-
+    document = [documents]
     poller = client.begin_analyze_actions(
         document,
         actions=[
@@ -121,12 +122,13 @@ def extractive_summarization(client, documents):
 # Example function for recognizing entities from text
 def entity_recognition_example(client, documents):
     try:
+        documents = [documents]
         result = client.recognize_entities(documents = documents)[0]
 
         print("Named Entities:\n")
         for entity in result.entities:
             if entity.category == 'Person':
-                return entity.text
+                return entity
         return None
     except Exception as err:
         print("Encountered exception. {}".format(err))
@@ -157,7 +159,7 @@ def ask_google(text_to_ask):
         if description:
             return description
     else:
-    print("Lo siento, no puedo ayudarte porque no tengo información sobre:" {query})
+        print("Lo siento, no puedo ayudarte porque no tengo información sobre:" + query)
 
 
 def ask_alessandro(ask_input):
@@ -167,39 +169,44 @@ def ask_alessandro(ask_input):
         if is_offensive != False :
             client = authenticate_client()
             extractive_summarization(client,ask_input)
-            entities = entity_recognition_example(client,ask_input)
-            data_list = []
-            for entity in entities:
+            entity = entity_recognition_example(client,ask_input)
+            print(entity)
+            print(type(entity))
+            if entity is not None:
+                data_list = []
+                # for entity in entities:
                 data_list.append([entity.text, entity.category, entity.confidence_score])
-            columns = ['Name','Category','Confidence Score']
-            df = pd.DataFrame(data_list, columns=columns)
+                columns = ['Name','Category','Confidence Score']
+                df = pd.DataFrame(data_list, columns=columns)
 
-            figuras_publica = df[df['Category'] == 'Person'].iloc[0].Name
+                figuras_publica = df[df['Category'] == 'Person'].iloc[0].Name
 
-            if figuras_publica :
-                print('figura publica')
-                ask_google(figuras_publica)
-                if description  
-                    # Leer respuesta
-                    speech_config.speech_synthesis_voice_name='es-BO-MarceloNeural'
-                    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
-                    speech_synthesis_result = speech_synthesizer.speak_text_async(description).get()
+                if figuras_publica :
+                    print('figura publica')
+                    description = ask_google(figuras_publica)
+                    if description:
+                        # Leer respuesta
+                        speech_config.speech_synthesis_voice_name='es-BO-MarceloNeural'
+                        speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+                        speech_synthesis_result = speech_synthesizer.speak_text_async(description).get()
 
-                if speech_synthesis_result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-                    print("Speech to text: [{}]".format(description))
-                elif speech_synthesis_result.reason == speechsdk.ResultReason.Canceled:
-                    cancellation_details = speech_synthesis_result.cancellation_details
-                    print("Speech synthesis canceled: {}".format(cancellation_details.reason))
-                    if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                        if cancellation_details.error_details:
-                            print("Error details: {}".format(cancellation_details.error_details))
-                            print("Did you set the speech resource key and region values?")
+                    if speech_synthesis_result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+                        print("Speech to text: [{}]".format(description))
+                    elif speech_synthesis_result.reason == speechsdk.ResultReason.Canceled:
+                        cancellation_details = speech_synthesis_result.cancellation_details
+                        print("Speech synthesis canceled: {}".format(cancellation_details.reason))
+                        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                            if cancellation_details.error_details:
+                                print("Error details: {}".format(cancellation_details.error_details))
+                                print("Did you set the speech resource key and region values?")
+                else:
+                    print('Lo siento, no puedo ayudarte porque no tengo información de esta entidad.')
+            else:
+                print('Lo siento, soy un asistente únicamente orientado a darte información sobre figuras públicas.')
 
-            else
-                print('Lo siento, soy un asistente únicamente orientado a darte información sobre figuras públicas.')    
-        else
+        else:
             print('Lo siento, no puedo ayudarte porque he detectado contenido ofensivo en tu pregunta')    
-    else None
+    else: None
 
 
 def from_mic(speech_config):
@@ -208,7 +215,7 @@ def from_mic(speech_config):
     result = speech_recognizer.recognize_once()
     if result.reason == speechsdk.ResultReason.RecognizedSpeech:
         print("Recognized: {}".format(result.text))
-        assistent_result = ask_alessandro(result.reason)
+        assistent_result = ask_alessandro(result.text)
         return assistent_result
     elif result.reason == speechsdk.ResultReason.NoMatch:
         print("No speech could be recognized: {}".format(result.no_match_details))
