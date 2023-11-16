@@ -14,6 +14,59 @@ from dotenv import load_dotenv
 
 load_dotenv("env.txt")
 
+def analyze_text(text_input: str):
+    # analyze text
+    key = os.environ["CONTENT_SAFETY_KEY"]
+    endpoint = os.environ["CONTENT_SAFETY_ENDPOINT"]
+
+    # Create a Content Safety client
+    client = ContentSafetyClient(endpoint, AzureKeyCredential(key))
+
+    # Contruct request
+    request = AnalyzeTextOptions(text=text_input)
+
+    # Analyze text
+    try:
+        response = client.analyze_text(request)
+    except HttpResponseError as e:
+        print("Analyze text failed.")
+        if e.error:
+            print(f"Error code: {e.error.code}")
+            print(f"Error message: {e.error.message}")
+            raise
+        print(e)
+        raise
+
+    if response.hate_result:
+        print(f"Hate severity: {response.hate_result.severity}")
+        hate_severity = response.hate_result.severity
+    if response.self_harm_result:
+        print(f"SelfHarm severity: {response.self_harm_result.severity}")
+        selfharm_severity = response.self_harm_result.severity
+    if response.sexual_result:
+        print(f"Sexual severity: {response.sexual_result.severity}")
+        sexual_severity = response.sexual_result.severity
+    if response.violence_result:
+        print(f"Violence severity: {response.violence_result.severity}")
+        violence_severity = response.violence_result.severity
+    if hate_severity < 1 or selfharm_severity < 1 or sexual_severity < 1 or violence_severity > 1 :
+        return True
+    else
+        return False
+
+
+#Summary entity: 
+key_sum = os.environ.get('LANGUAGE_KEY')
+endpoint_sum = os.environ.get('LANGUAGE_ENDPOINT')
+# Autenticarse
+def authenticate_client():
+    ta_credential = AzureKeyCredential(key_sum)
+    text_analytics_client = TextAnalyticsClient(
+            endpoint=endpoint_sum, 
+            credential=ta_credential)
+    return text_analytics_client
+
+client = authenticate_client()
 
 def ask_google(text_to_ask):
     api_key = os.environ.get('API_GOOGLE_KEY')
@@ -46,7 +99,8 @@ def ask_google(text_to_ask):
 def ask_alessandro(ask_input):
     if "Alessandro" in ask_input:
             #analyze the content
-               
+            print(analyze_text(ask_input))
+
             
         else None
 
